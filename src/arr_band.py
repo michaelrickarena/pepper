@@ -1,11 +1,9 @@
 import pandas as pd
 import os
-from utils.utils import clean_ending_arr, clean_mrr_growth
+from utils.utils import clean_ending_arr, clean_mrr_growth, load_and_clean_data
 
 def process_arr_band():
-    df = pd.read_csv('../Account Segmentation & Revenue Team Structuring Exercise - Data.csv')
-    df = clean_ending_arr(df)
-    df = clean_mrr_growth(df)
+    df = load_and_clean_data()
     # Map ARR Band ranges to numerical ranges
     arr_band_ranges = {
         '< $10k': (0, 10000),
@@ -25,14 +23,14 @@ def process_arr_band():
     df['Upper Bound'] = df['ARR Band Range'].apply(lambda x: x[1] if pd.notna(x) else None)
     df['Middle'] = df.apply(lambda row: (row['Lower Bound'] + row['Upper Bound']) / 2 if pd.notna(row['Lower Bound']) and pd.notna(row['Upper Bound']) else None, axis=1)
 
-    # Filter customers based on Ending ARR
+    # Filter customers based on which range they fall into
     below_lower = df[df['Ending ARR'] < df['Lower Bound']]
     middle_to_lower = df[(df['Ending ARR'] >= df['Lower Bound']) & (df['Ending ARR'] < df['Middle'])]
     middle_to_upper = df[(df['Ending ARR'] >= df['Middle']) & (df['Ending ARR'] <= df['Upper Bound'])]
     above_upper = df[df['Ending ARR'] > df['Upper Bound']]
 
 
-    # Create summary tables for each group
+    # Create summary tables
     def create_summary_table(group_name, group_df):
         return {
             'Group': group_name,
@@ -57,11 +55,11 @@ def process_arr_band():
         'Average % MRR Growth': 2,
         'Average # of Products': 2
     })
-    # Ensure the 'ARR Band' folder exists
+    # Create ARR band folder if it doesn't exist
     output_folder = '../data/ARR Band'
     os.makedirs(output_folder, exist_ok=True)
 
-    # Export CSV
+    # Export to CSV
     output_file = os.path.join(output_folder, 'arr_band_summary.csv')
     summary_df.to_csv(output_file, index=False)
     print(f"Summary table exported to {output_file}")
