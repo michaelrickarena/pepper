@@ -36,15 +36,7 @@ This project is designed to analyze account segmentation and revenue team struct
    ```bash
    python __main__.py
    ```
-2. The results will be saved in the `../data/Segments` directory as CSV files.
-
-### Step 5: Review the Outputs
-
-1. Open the generated files in the `../data/Segments` directory:
-   - `segments_summary.csv`
-   - `segments_analysis.csv`
-   - `segment_verticals_summary.csv`
-2. Analyze the results as needed.
+2. The results will be saved in the `../data/Segments`, `../data/ARR Band`, `../data/Verticals` directory as CSV files.
 
 ## Requirements
 
