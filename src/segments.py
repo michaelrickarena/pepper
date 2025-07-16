@@ -88,6 +88,8 @@ def process_segments():
     df.to_csv(output_file_detailed, index=False)
     print(f"Segment analysis exported to {output_file_detailed}")
 
+
+
     # Create a pivot table to calculate the percentage of verticals in each segment
     vertical_summary = (
         df.groupby(['Segment', 'Vertical'])['Distributor Name']
@@ -96,20 +98,20 @@ def process_segments():
         .rename(columns={'Distributor Name': 'Count'})
     )
 
-    # Calculate the total count of each segment
-    segment_totals = vertical_summary.groupby('Segment')['Count'].sum().reset_index()
-    segment_totals = segment_totals.rename(columns={'Count': 'Segment Total'})
+    # Calculate the total count of each vertical
+    vertical_totals = vertical_summary.groupby('Vertical')['Count'].sum().reset_index()
+    vertical_totals = vertical_totals.rename(columns={'Count': 'Vertical Total'})
 
     # Merge the totals back into the vertical summary
-    vertical_summary = vertical_summary.merge(segment_totals, on='Segment')
+    vertical_summary = vertical_summary.merge(vertical_totals, on='Vertical')
 
-    # Calculate the percentage of each vertical in the segment
-    vertical_summary['% of Segment'] = (vertical_summary['Count'] / vertical_summary['Segment Total']).round(4)
+    # Calculate the percentage of each segment in the vertical
+    vertical_summary['% of Vertical'] = (vertical_summary['Count'] / vertical_summary['Vertical Total']).round(4)
 
     # Pivot the table to get the desired format
-    pivot_table = vertical_summary.pivot(index='Segment', columns='Vertical', values='% of Segment').fillna(0)
+    pivot_table = vertical_summary.pivot(index='Vertical', columns='Segment', values='% of Vertical').fillna(0)
 
     # Export the pivot table
-    output_file_verticals = os.path.join(output_folder, 'segment_verticals_summary.csv')
+    output_file_verticals = os.path.join(output_folder, 'segments_verticals_summary.csv')
     pivot_table.to_csv(output_file_verticals)
     print(f"Verticals summary exported to {output_file_verticals}")

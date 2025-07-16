@@ -32,9 +32,11 @@ def process_arr_band():
     # Create summary tables with detailed segment alignment
     def create_detailed_summary_table(group_name, group_df):
         total_accounts = len(df)
-        segment_counts = group_df['Segment'].value_counts(normalize=True).mul(100).round(2)
-        primary_segments = ', '.join(segment_counts.index[:1])  # Top 2 segments
-        segment_distribution = ', '.join([f"{seg} {pct}%" for seg, pct in segment_counts.items()])
+        # Calculate count makeup for each segment
+        segment_counts = group_df['Segment'].value_counts().reindex(
+            ['Strategic Accounts', 'Key Accounts', 'Growth Accounts', 'Standard Accounts', 'At Risk Accounts'],
+            fill_value=0
+        )
 
         return {
             'Group': group_name,
@@ -43,8 +45,11 @@ def process_arr_band():
             'Avg Ending ARR': round(group_df['Ending ARR'].mean(), 2),
             'Avg % MRR Growth': round(group_df['% MRR Growth'].mean(), 2),
             'Avg # Products': round(group_df['# of Products'].mean(), 2),
-            'Primary Segment Alignment': primary_segments,
-            '% of Accounts by Segment': segment_distribution
+            'Strategic Accounts': segment_counts['Strategic Accounts'],
+            'Key Accounts': segment_counts['Key Accounts'],
+            'Growth Accounts': segment_counts['Growth Accounts'],
+            'Standard Accounts': segment_counts['Standard Accounts'],
+            'At Risk Accounts': segment_counts['At Risk Accounts']
         }
 
     # Generate detailed summary tables

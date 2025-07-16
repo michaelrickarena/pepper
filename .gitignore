@@ -28,6 +28,12 @@ Thumbs.db
 .idea/
 
 /data/
+/old/
+/charts/
 
 Account Segmentation & Revenue Team Structuring Exercise.pdf
 Account Segmentation & Revenue Team Structuring Exercise - Data.csv
+Account Segmentation & Revenue Team Structuring Exercise - Data - v2.csv
+cleaned_csv.csv
+
+raw_data.csv
