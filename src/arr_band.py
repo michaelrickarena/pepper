@@ -1,10 +1,11 @@
 import pandas as pd
+import os
+from utils.utils import clean_ending_arr, clean_mrr_growth
 
 def process_arr_band():
     df = pd.read_csv('../Account Segmentation & Revenue Team Structuring Exercise - Data.csv')
-
-    df['Ending ARR'] = df['Ending ARR'].str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(int)
-
+    df = clean_ending_arr(df)
+    df = clean_mrr_growth(df)
     # Map ARR Band ranges to numerical ranges
     arr_band_ranges = {
         '< $10k': (0, 10000),
@@ -30,22 +31,37 @@ def process_arr_band():
     middle_to_upper = df[(df['Ending ARR'] >= df['Middle']) & (df['Ending ARR'] <= df['Upper Bound'])]
     above_upper = df[df['Ending ARR'] > df['Upper Bound']]
 
-    # Print results
-    print("Below Lower Bound:")
-    print(len(below_lower))
-    print(below_lower[['ARR Band', 'ARR Band Range', 'Ending ARR']])
 
-    print("\nMiddle to Lower Bound:")
-    print(len(middle_to_lower))
-    print(middle_to_lower[['ARR Band', 'ARR Band Range', 'Ending ARR']])
+    # Create summary tables for each group
+    def create_summary_table(group_name, group_df):
+        return {
+            'Group': group_name,
+            '# Accounts': len(group_df),
+            '% of Total': len(group_df) / 1000,
+            'Average Ending ARR': int(group_df['Ending ARR'].mean()),
+            'Average % MRR Growth': group_df['% MRR Growth'].mean(),
+            'Average # of Products': group_df['# of Products'].mean()
+        }
 
-    print("\nMiddle to Upper Bound:")
-    print(len(middle_to_upper))
-    print(middle_to_upper[['ARR Band', 'ARR Band Range', 'Ending ARR']])
+    # Generate summary tables
+    summary_tables = [
+        create_summary_table('Below Lower Bound', below_lower),
+        create_summary_table('Middle to Lower Bound', middle_to_lower),
+        create_summary_table('Middle to Upper Bound', middle_to_upper),
+        create_summary_table('Above Upper Bound', above_upper)
+    ]
 
-    print("\nAbove Upper Bound:")
-    print(len(above_upper))
-    print(above_upper[['ARR Band', 'ARR Band Range', 'Ending ARR']])
+    summary_df = pd.DataFrame(summary_tables)
+    summary_df = summary_df.round({
+        '% of Total': 2,
+        'Average % MRR Growth': 2,
+        'Average # of Products': 2
+    })
+    # Ensure the 'ARR Band' folder exists
+    output_folder = '../data/ARR Band'
+    os.makedirs(output_folder, exist_ok=True)
 
-
-# How far Ending ARR is from the ARR band range
+    # Export CSV
+    output_file = os.path.join(output_folder, 'arr_band_summary.csv')
+    summary_df.to_csv(output_file, index=False)
+    print(f"Summary table exported to {output_file}")
