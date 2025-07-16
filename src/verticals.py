@@ -15,16 +15,30 @@ def process_verticals():
         }).reset_index()
 
         vertical_summary['# Accounts'] = df.groupby('Vertical').size().values
-        vertical_summary['% of Accounts'] = (vertical_summary['# Accounts'] / 1000).round(2)
+        vertical_summary['% of Accounts'] = (vertical_summary['# Accounts'] / len(df)).round(4)
 
         # Round columns to 2 decimals
-        vertical_summary[['% MRR Growth', '# of Products']] = vertical_summary[['% MRR Growth', '# of Products']].round(2)
+        vertical_summary[['% MRR Growth', '# of Products']] = vertical_summary[['% MRR Growth', '# of Products']].round(4)
         vertical_summary[['Ending ARR']] = vertical_summary[['Ending ARR']].round(0).astype(int)
 
         # Rename 'Ending ARR' to 'Average Ending ARR'
         vertical_summary = vertical_summary.rename(columns={'Ending ARR': 'Average Ending ARR', 
                                                            '% MRR Growth': 'Average % MRR Growth',
                                                            '# of Products': 'Average # of Products'})
+
+        # Calculate the percentage of each vertical in the high sales range ('$250k+')
+        high_sales_range = df[df['ARR Band'] == '$250k+']
+        high_sales_percentage = (
+            high_sales_range['Vertical']
+            .value_counts(normalize=True)
+            .round(4)
+            .reindex(vertical_summary['Vertical'])
+            .fillna(0)
+            .reset_index(drop=True)
+        )
+
+        # Add the '% in High Sales Range (> $250mm)' column to the vertical summary
+        vertical_summary['% in High Sales Range (> $250mm)'] = high_sales_percentage
 
         # Create output folder if it doesn't exist
         output_folder = '../data/Verticals'

@@ -59,14 +59,57 @@ def process_segments():
     summary['% of Customers in Segment With 1 Product'] = (summary['# of Rows with 1 Product'] / summary['# Accounts']).round(4)
     summary.drop(columns=['# of Rows with 1 Product'], inplace=True)
 
-    # Export summary table
+    # Calculate % US Accounts and % Canada Accounts
+    country_summary = df.groupby(['Segment', 'Country'])['Distributor Name'].count().unstack(fill_value=0)
+    total_accounts_per_segment = country_summary.sum(axis=1)
+    country_summary['% US Accounts'] = (country_summary.get('US', 0) / total_accounts_per_segment).round(4)
+    country_summary['% Canada Accounts'] = (country_summary.get('Canada', 0) / total_accounts_per_segment).round(4)
+
+    # Merge the calculated columns into the summary DataFrame
+    summary = summary.merge(country_summary[['% US Accounts', '% Canada Accounts']], on='Segment', how='left')
+
+    # Calculate US Total ARR ($MM) and Canada Total ARR ($MM)
+    arr_summary = df.groupby(['Segment', 'Country'])['Ending ARR'].sum().unstack(fill_value=0)
+    arr_summary['US Total ARR ($MM)'] = (arr_summary.get('US', 0) / 1_000_000).round(2)  # Convert to millions
+    arr_summary['Canada Total ARR ($MM)'] = (arr_summary.get('Canada', 0) / 1_000_000).round(2)  # Convert to millions
+
+    # Merge the calculated columns into the summary DataFrame
+    summary = summary.merge(arr_summary[['US Total ARR ($MM)', 'Canada Total ARR ($MM)']], on='Segment', how='left')
+
+    # Export the updated summary table
     output_folder = '../data/Segments'
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, 'segments_summary.csv')
     summary.to_csv(output_file, index=False)
-    print(f"Segment summary exported to {output_file}")
+    print(f"Updated segment summary exported to {output_file}")
 
     # Export detailed data with segments
     output_file_detailed = os.path.join(output_folder, 'segments_analysis.csv')
     df.to_csv(output_file_detailed, index=False)
     print(f"Segment analysis exported to {output_file_detailed}")
+
+    # Create a pivot table to calculate the percentage of verticals in each segment
+    vertical_summary = (
+        df.groupby(['Segment', 'Vertical'])['Distributor Name']
+        .count()
+        .reset_index()
+        .rename(columns={'Distributor Name': 'Count'})
+    )
+
+    # Calculate the total count of each segment
+    segment_totals = vertical_summary.groupby('Segment')['Count'].sum().reset_index()
+    segment_totals = segment_totals.rename(columns={'Count': 'Segment Total'})
+
+    # Merge the totals back into the vertical summary
+    vertical_summary = vertical_summary.merge(segment_totals, on='Segment')
+
+    # Calculate the percentage of each vertical in the segment
+    vertical_summary['% of Segment'] = (vertical_summary['Count'] / vertical_summary['Segment Total']).round(4)
+
+    # Pivot the table to get the desired format
+    pivot_table = vertical_summary.pivot(index='Segment', columns='Vertical', values='% of Segment').fillna(0)
+
+    # Export the pivot table
+    output_file_verticals = os.path.join(output_folder, 'segment_verticals_summary.csv')
+    pivot_table.to_csv(output_file_verticals)
+    print(f"Verticals summary exported to {output_file_verticals}")
