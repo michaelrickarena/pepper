@@ -66,7 +66,7 @@ def create_segment_distribution_chart():
     output_folder = '../charts'
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, 'segment_distribution_chart.png')
-    plt.savefig(output_file)
+    plt.savefig(output_file, bbox_inches='tight', transparent=True)
     print(f"Chart saved to {output_file}")
 
     plt.close()  # Close the figure to free memory

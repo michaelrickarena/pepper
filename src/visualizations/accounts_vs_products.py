@@ -7,7 +7,11 @@ def create_accounts_vs_products_chart():
     file_path = '../data/Segments/segments_summary.csv'
     df = pd.read_csv(file_path)
 
-    # Extract relevant columns
+    # Reorder the segments based on the desired order
+    desired_order = ['Strategic Accounts', 'Key Accounts', 'Growth Accounts', 'Standard Accounts', 'At Risk Accounts']
+    df = df.set_index('Segment').loc[desired_order].reset_index()
+
+    # Extract relevant columns after reordering
     segments = df['Segment']
     accounts = df['# Accounts']
     one_product_percentage = df['% of Customers in Segment With 1 Product']
@@ -60,7 +64,7 @@ def create_accounts_vs_products_chart():
     output_folder = '../charts'
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, 'accounts_vs_products_chart.png')
-    plt.savefig(output_file, bbox_inches='tight')
+    plt.savefig(output_file, bbox_inches='tight', transparent=True)
     print(f"Chart saved to {output_file}")
 
     plt.close()  # Close the figure to free memory

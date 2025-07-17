@@ -31,17 +31,19 @@ def create_arr_band_positioning_chart():
         'At Risk Accounts': "#d30d0d"
     }
 
-    # Plot each segment as a stacked bar
+    # Plot each segment as a stacked bar in reverse order
     bottom = pd.Series([0] * len(groups))
-    # Adjust bar width for thinner bars
-    bar_width = 0.4
-    for segment in segments:
-        ax.bar(groups, df[segment], bottom=bottom, width=bar_width, label=segment, color=colors.get(segment, 'gray'))
+    handles = []
+    labels = []
+    for segment in reversed(segments):  # Reverse for plotting (Strategic at bottom)
+        bar = ax.bar(groups, df[segment], bottom=bottom, width=0.4, label=segment, color=colors.get(segment, 'gray'))
         bottom = bottom + df[segment]  # Update bottom for next segment
+        handles.append(bar[0])  # Store handle for legend
+        labels.append(segment)   # Store label for legend
 
     # Add data labels inside each stacked bar
     bottom = pd.Series([0] * len(groups))
-    for segment in segments:
+    for segment in reversed(segments):  # Use same reverse order for labels
         for i, value in enumerate(df[segment]):
             if value > 0:  # Only add labels for non-zero values
                 percentage = int((value / df[segments].sum(axis=1).iloc[i]) * 100)
@@ -59,14 +61,14 @@ def create_arr_band_positioning_chart():
     # Rotate x-axis labels for better readability
     plt.xticks(rotation=45, ha='right', color='black')
 
-    # Add legend
-    ax.legend(title='Segments', bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Add legend with original segment order
+    ax.legend(handles=handles[::-1], labels=labels[::-1], title='Segments', bbox_to_anchor=(1.05, 1), loc='upper left')
 
     # Save the chart
     output_folder = '../charts'
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, 'arr_band_positioning_by_segment.png')
-    plt.savefig(output_file, bbox_inches='tight')
+    plt.savefig(output_file, bbox_inches='tight', transparent=True)
     print(f"Chart saved to {output_file}")
 
     plt.close()  # Close the figure to free memory
